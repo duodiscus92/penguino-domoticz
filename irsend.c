@@ -18,7 +18,7 @@
 #define HEADER_SPACE 	4500
 #define GAP 		60000
 
-#define NB_KEYS		9
+#define NB_KEYS		11
 #define KEY_ONOFF	0xF8FFC13E
 #define KEY_MODE	0xF8FF837C
 #define KEY_FAN		0xF8FF03FC

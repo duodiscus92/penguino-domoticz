@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+/* idx of the switch virtual device on domotics server */
+#define IDX 835
 
 #define MAXSIZE 40
 
@@ -25,6 +27,7 @@ int main(int argc, char* argv[])
 
    while(1){
       fgets(jsonstring, MAXSIZE-1, stdin);
+      //printf("%s\n", jsonstring);
       sscanf(jsonstring, "   %s : %s,", slabel, svalue);
       //printf("Label:%s, Value: %s\n", slabel, svalue);
       removechar('"', dlabel, slabel, MAXSIZE); 
@@ -32,7 +35,7 @@ int main(int argc, char* argv[])
       strcpy(svalue, dvalue);
       removechar(',', dvalue, svalue, MAXSIZE); 
       //printf("Label:%s, Value: %s\n", dlabel, dvalue);
-      if (!strcmp(dlabel, "idx") && atoi(dvalue) == 835){
+      if (!strcmp(dlabel, "idx") && atoi(dvalue) == IDX){
 	   //printf("Found !!!!\n");
 	   found = 1;
       }
