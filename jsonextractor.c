@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /* idx of the switch virtual device on domotics server */
 #define IDX 835
@@ -23,7 +24,19 @@ void *removechar(char toremove, char *dest, char *src, int len)
 int main(int argc, char* argv[])
 {
    char jsonstring[MAXSIZE], slabel[MAXSIZE], svalue[MAXSIZE], dlabel[MAXSIZE], dvalue[MAXSIZE];
-   int found = 0;
+   int c, found = 0, idx=IDX;
+
+   /* gzetting parameters on command call */
+   while ((c = getopt(argc , argv, "i:")) != -1)
+      switch (c) {
+      case 'i':
+         idx = atoi(optarg);
+         break;
+      case 'h':
+      default: /* '?' */
+         fprintf(stderr, "Usage: %s  [-i <IDX value> ]\n", argv[0]);
+         exit(EXIT_FAILURE);
+     }
 
    while(1){
       fgets(jsonstring, MAXSIZE-1, stdin);
@@ -35,7 +48,7 @@ int main(int argc, char* argv[])
       strcpy(svalue, dvalue);
       removechar(',', dvalue, svalue, MAXSIZE); 
       //printf("Label:%s, Value: %s\n", dlabel, dvalue);
-      if (!strcmp(dlabel, "idx") && atoi(dvalue) == IDX){
+      if (!strcmp(dlabel, "idx") && atoi(dvalue) == idx){
 	   //printf("Found !!!!\n");
 	   found = 1;
       }
