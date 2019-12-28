@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -141,9 +142,9 @@ void  sendcode(long code)
 
 int main (int argc, char** argv)
 {
-   int repeat = 0, domoticzmode = 0, domoticzcode;
+   int repeat = 0, bursts = 1, domoticzmode = 0, domoticzcode;
    char key[10];
-   int i, c, nbkeys = sizeof(pkeys)/sizeof(DOMOTICZKEY);
+   int i, j, c, nbkeys = sizeof(pkeys)/sizeof(DOMOTICZKEY);
    long code;
    DOMOTICZKEY *p = pkeys;
 
@@ -151,7 +152,7 @@ int main (int argc, char** argv)
    strcpy(key, "ONOFF");
 
    /* gzetting parameters on command call */
-   while ((c = getopt(argc , argv, "dk:r:lh")) != -1)
+   while ((c = getopt(argc , argv, "dk:r:lhb:")) != -1)
       switch (c) {
       case 'd':
 	 fprintf(stderr, "Entering in domoticz mode\n");
@@ -168,13 +169,24 @@ int main (int argc, char** argv)
 	 p=lgkeys;
 	 fprintf(stderr, "Entering in LG TV mode\n");
 	 break;
+      case 'b':
+	 bursts = atoi(optarg);
+	 if(bursts <1) bursts = 1;
+	 if(bursts > 10) bursts = 10;
+	 fprintf(stderr, "Entering in burst mode with %d burst(s)\n", bursts);
+	 break;
       case 'h':
       default: /* '?' */
-         fprintf(stderr, "Usage: %s [-d] [-l] [-k <KEYVALUE>] [-r <repeat value (integer)>]\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-d] [-l] [-k <KEYVALUE>] [-r <repeat value (integer)  [-b <burst value (integer)>]>]\n", argv[0]);
 	 fprintf(stderr, "When -d option is selected (domoticz mode) then -k option is ignored\n"); 
          exit(EXIT_FAILURE);
      }
 
+   /* verify -b and -r options consistency */
+   if ((bursts >1) && (repeat >1)){
+      printf("Usage : cannot use -r and -b options at the same time\n");
+      exit(EXIT_FAILURE);
+   }
    /* initialisations diverses */
    req.tv_sec = 0;
    /* WiringPi initialization */
@@ -212,7 +224,7 @@ int main (int argc, char** argv)
       }
 
       fprintf(stderr, "Emission du code 0x%08x\n", code);
-
+for(j=0; j<bursts; j++){
       // transmitting the header
       digitalWrite(IR_PIN, HIGH);
       req.tv_nsec = HEADER_MARK*1000;
@@ -247,7 +259,7 @@ int main (int argc, char** argv)
       // gap before tranmitting another code
       req.tv_nsec = GAP*1000;
       nanosleep(&req, NULL);
-
+} // end of burst loop
    } while(domoticzmode == 1);
    return 0;
 }
