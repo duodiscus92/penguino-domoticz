@@ -113,7 +113,7 @@ DOMOTICZKEY lgkeys[] = {
 };
 
 struct timespec req;
-
+//struct time_t mytime;
 /* transmission of the code (32 bits) */
 void  sendcode(long code)
 {
@@ -147,15 +147,17 @@ int main (int argc, char** argv)
    int i, j, c, nbkeys = sizeof(pkeys)/sizeof(DOMOTICZKEY);
    long code;
    DOMOTICZKEY *p = pkeys;
+   time_t t;
 
    /* default values */
    strcpy(key, "ONOFF");
 
    /* gzetting parameters on command call */
+   t = time(NULL);
    while ((c = getopt(argc , argv, "dk:r:lhb:")) != -1)
       switch (c) {
       case 'd':
-	 fprintf(stderr, "Entering in domoticz mode\n");
+	 fprintf(stderr, "%s: Entering in domoticz mode\n", ctime(&t));
          domoticzmode = 1;
 	 break;
       case 'k':
@@ -167,13 +169,13 @@ int main (int argc, char** argv)
       case 'l':
 	 nbkeys = sizeof(lgkeys)/sizeof(DOMOTICZKEY);
 	 p=lgkeys;
-	 fprintf(stderr, "Entering in LG TV mode\n");
+	 fprintf(stderr, "%s: Entering in LG TV mode\n", ctime(&t));
 	 break;
       case 'b':
 	 bursts = atoi(optarg);
 	 if(bursts <1) bursts = 1;
 	 if(bursts > 10) bursts = 10;
-	 fprintf(stderr, "Entering in burst mode with %d burst(s)\n", bursts);
+	 fprintf(stderr, "%s: Entering in burst mode with %d burst(s)\n", ctime(&t), bursts);
 	 break;
       case 'h':
       default: /* '?' */
@@ -184,7 +186,7 @@ int main (int argc, char** argv)
 
    /* verify -b and -r options consistency */
    if ((bursts >1) && (repeat >1)){
-      printf("Usage : cannot use -r and -b options at the same time\n");
+      fprintf(stderr, "Usage : cannot use -r and -b options at the same time\n");
       exit(EXIT_FAILURE);
    }
    /* initialisations diverses */
@@ -192,11 +194,11 @@ int main (int argc, char** argv)
    /* WiringPi initialization */
    wiringPiSetupGpio() ;
    pinMode(IR_PIN, OUTPUT);
-   printf("Nb keys: %d\n", nbkeys); 
+   fprintf(stderr, "%s: Nb keys: %d\n", ctime(&t), nbkeys); 
 
    /* endless loop if in Domoticz mode otherwise on-shot only/si on est en mode domoticz on boucle sans fin, sinon c'est one-shot */
    do{
-      //gettin the code to transmit (manual mode)/obtenir le code à émettre (mode manuel)
+      //getting the code to transmit (manual mode)/obtenir le code à émettre (mode manuel)
       if(domoticzmode == 0){
          for(i = 0; i < sizeof(mkeys)/sizeof(MANUALKEY); i++)
             if(!strcmp(key, mkeys[i].keyname)){
@@ -207,7 +209,8 @@ int main (int argc, char** argv)
       //getting the code to transmit in Domoticz mode/ obtenir le code à émettre mode Domoticz
       else {/*domoticsmode == 1*/
 	 fscanf(stdin, "%d", &domoticzcode);
-	 fprintf(stderr, "Code domotique reçu : %d\n", domoticzcode);
+	 t = time(NULL);
+	 fprintf(stderr, "%s: Code domotique reçu : %d\n", ctime(&t), domoticzcode);
          for(i = 0; i < nbkeys; i++)
             if(domoticzcode == p[i].domoticzcode){
                code = p[i].keyvalue;
@@ -215,15 +218,16 @@ int main (int argc, char** argv)
             }
       }
 
+      t = time(NULL);
       if(i == nbkeys){
-        fprintf(stderr, "Key not found\n");
+        fprintf(stderr, "%s: Key not found\n", ctime(&t));
 	if(domoticzmode == 1)
 	   continue;
 	else
 	   exit(1);
       }
 
-      fprintf(stderr, "Emission du code 0x%08x\n", code);
+      fprintf(stderr, "%s: Emission du code 0x%08x\n", ctime(&t), code);
 for(j=0; j<bursts; j++){
       // transmitting the header
       digitalWrite(IR_PIN, HIGH);
