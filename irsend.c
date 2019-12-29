@@ -199,7 +199,7 @@ int main (int argc, char** argv)
          break;
       case 'h':
       default: /* '?' */
-         fprintf(stderr, "Usage: %s [-d] [-l] [-k <KEYVALUE>] [-r <repeat value (integer)>  [-b <burst value (integer)>] [-c <timing coeficient (integer)]\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-d] [-l] [-k <KEYVALUE>] [-r <repeat value (integer)>  [-b <burst value (integer)>] [-c <timing coeficient (integer)>]\n", argv[0]);
 	 fprintf(stderr, "When -d option is selected (domoticz mode) then -k option is ignored\n"); 
          exit(EXIT_FAILURE);
      }
