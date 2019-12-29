@@ -11,10 +11,15 @@
 #define IR_PIN	22 	// GPIO 22
 #define NB_KEYS	11
 
-/* duration in ns */
+/* us to ns coef */
+#define US2NS		850 //830
+/* duration in us */
 #define SPACE_ONE 	1687
+//#define SPACE_ONE 	1568
 #define SPACE_ZERO 	562
 #define MARK 		562
+//#define SPACE_ZERO 	522
+//#define MARK 		522
 #define HEADER_MARK 	9000
 #define HEADER_SPACE 	4500
 #define GAP 		60000
@@ -113,6 +118,8 @@ DOMOTICZKEY lgkeys[] = {
 };
 
 struct timespec req;
+int us2ns = US2NS;
+
 //struct time_t mytime;
 /* transmission of the code (32 bits) */
 void  sendcode(long code)
@@ -122,18 +129,18 @@ void  sendcode(long code)
    for(i=0; i<CODE_SIZE; i++){
       if (code < 0){
          digitalWrite(IR_PIN, HIGH);
-         req.tv_nsec = MARK*1000;
+         req.tv_nsec = MARK*us2ns;
          nanosleep(&req, NULL);
          digitalWrite(IR_PIN, LOW);
-         req.tv_nsec = SPACE_ONE*1000;
+         req.tv_nsec = SPACE_ONE*us2ns;
          nanosleep(&req, NULL);
       }
       else {
          digitalWrite(IR_PIN, HIGH);
-         req.tv_nsec = MARK*1000;
+         req.tv_nsec = MARK*us2ns;
          nanosleep(&req, NULL);
          digitalWrite(IR_PIN, LOW);
-         req.tv_nsec = SPACE_ZERO*1000;
+         req.tv_nsec = SPACE_ZERO*us2ns;
          nanosleep(&req, NULL);
       }
       code <<=1 ;
@@ -164,7 +171,7 @@ int main (int argc, char** argv)
    strcpy(key, "ONOFF");
 
    /* gzetting parameters on command call */
-   while ((c = getopt(argc , argv, "dk:r:lhb:")) != -1)
+   while ((c = getopt(argc , argv, "dk:r:lhb:c:")) != -1)
       switch (c) {
       case 'd':
 	 fprintf(stderr, "%s: Entering in domoticz mode\n", myctime(t));
@@ -187,9 +194,12 @@ int main (int argc, char** argv)
 	 if(bursts > 10) bursts = 10;
 	 fprintf(stderr, "%s: Entering in burst mode with %d burst(s)\n", myctime(t), bursts);
 	 break;
+      case 'c':
+         us2ns = atoi(optarg);
+         break;
       case 'h':
       default: /* '?' */
-         fprintf(stderr, "Usage: %s [-d] [-l] [-k <KEYVALUE>] [-r <repeat value (integer)  [-b <burst value (integer)>]>]\n", argv[0]);
+         fprintf(stderr, "Usage: %s [-d] [-l] [-k <KEYVALUE>] [-r <repeat value (integer)>  [-b <burst value (integer)>] [-c <timing coeficient (integer)]\n", argv[0]);
 	 fprintf(stderr, "When -d option is selected (domoticz mode) then -k option is ignored\n"); 
          exit(EXIT_FAILURE);
      }
@@ -205,6 +215,7 @@ int main (int argc, char** argv)
    wiringPiSetupGpio() ;
    pinMode(IR_PIN, OUTPUT);
    fprintf(stderr, "%s: Nb keys: %d\n", myctime(t), nbkeys); 
+   fprintf(stderr, "%s: Using timing coefficient :%d\n", myctime(t), us2ns);
 
    /* endless loop if in Domoticz mode otherwise on-shot only/si on est en mode domoticz on boucle sans fin, sinon c'est one-shot */
    do{
@@ -239,10 +250,10 @@ int main (int argc, char** argv)
 for(j=0; j<bursts; j++){
       // transmitting the header
       digitalWrite(IR_PIN, HIGH);
-      req.tv_nsec = HEADER_MARK*1000;
+      req.tv_nsec = HEADER_MARK*us2ns;
       nanosleep(&req, NULL);
       digitalWrite(IR_PIN, LOW);
-      req.tv_nsec = HEADER_SPACE*1000;
+      req.tv_nsec = HEADER_SPACE*us2ns;
       nanosleep(&req, NULL);
 
       /* transmitting the code itself  */
@@ -250,7 +261,7 @@ for(j=0; j<bursts; j++){
 
       /* transmitting the stop bit  */
       digitalWrite(IR_PIN, HIGH);
-      req.tv_nsec = MARK*1000;
+      req.tv_nsec = MARK*us2ns;
       nanosleep(&req, NULL);
       digitalWrite(IR_PIN, LOW);
 
@@ -262,14 +273,14 @@ for(j=0; j<bursts; j++){
       digitalWrite(IR_PIN, LOW);
       usleep(2250);
       digitalWrite(IR_PIN, HIGH);
-      req.tv_nsec = MARK*1000;
+      req.tv_nsec = MARK*us2ns;
       nanosleep(&req, NULL);
       digitalWrite(IR_PIN, LOW);
       usleep(96190);
       }
 
       // gap before tranmitting another code
-      req.tv_nsec = GAP*1000;
+      req.tv_nsec = GAP*us2ns;
       nanosleep(&req, NULL);
 } // end of burst loop
    } while(domoticzmode == 1);
