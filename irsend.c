@@ -55,7 +55,7 @@ typedef struct {
   long keyvalue;
 } MANUALKEY;
 
-MANUALKEY mkeys[] = {
+MANUALKEY penguinokeys[] = {
   "ONOFF", KEY_ONOFF, 
   "MODE", KEY_MODE,
   "FAN", KEY_FAN,
@@ -65,6 +65,9 @@ MANUALKEY mkeys[] = {
   "OSC", KEY_OSC,
   "HOME", KEY_HOME,
   "SILENT", KEY_SILENT,
+};
+
+MANUALKEY lgtvkeys[] = {
   "MA", KEY_LGONOFF,
   "1", KEY_LG1,
   "2", KEY_LG2,
@@ -162,9 +165,9 @@ int main (int argc, char** argv)
 {
    int repeat = 0, bursts = 1, domoticzmode = 0, domoticzcode;
    char key[10];
-   int i, j, c, nbkeys = sizeof(pkeys)/sizeof(DOMOTICZKEY);
+   int i, j, c, nbkeys = sizeof(pkeys)/sizeof(DOMOTICZKEY); /* default value for nbkeys */
    long code;
-   DOMOTICZKEY *p = pkeys;
+   DOMOTICZKEY *p = pkeys; MANUALKEY *mkeys = penguinokeys;
    char t[80];
 
    /* default values */
@@ -186,6 +189,7 @@ int main (int argc, char** argv)
       case 'l':
 	 nbkeys = sizeof(lgkeys)/sizeof(DOMOTICZKEY);
 	 p=lgkeys;
+	 mkeys = lgtvkeys;
 	 fprintf(stderr, "%s: Entering in LG TV mode\n", myctime(t));
 	 break;
       case 'b':
@@ -214,6 +218,7 @@ int main (int argc, char** argv)
    /* WiringPi initialization */
    wiringPiSetupGpio() ;
    pinMode(IR_PIN, OUTPUT);
+   /* print some information */
    fprintf(stderr, "%s: Nb keys: %d\n", myctime(t), nbkeys); 
    fprintf(stderr, "%s: Using timing coefficient :%d\n", myctime(t), us2ns);
 
@@ -221,7 +226,7 @@ int main (int argc, char** argv)
    do{
       //getting the code to transmit (manual mode)/obtenir le code à émettre (mode manuel)
       if(domoticzmode == 0){
-         for(i = 0; i < sizeof(mkeys)/sizeof(MANUALKEY); i++)
+         for(i = 0; i < nbkeys; i++)
             if(!strcmp(key, mkeys[i].keyname)){
                code = mkeys[i].keyvalue;
 	       break;

@@ -1,0 +1,16 @@
+[Unit]
+Description=/opt/lgtv.sh Compatibility
+ConditionPathExists=/opt/lgtv.sh
+after=NetworkManager.service
+ 
+[Service]
+Type=forking
+ExecStart=/opt/lgtv.sh start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+ 
+[Install]
+WantedBy=multi-user.target
+
